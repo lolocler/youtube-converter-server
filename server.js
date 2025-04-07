@@ -3,7 +3,7 @@ const ytdl = require('@distube/ytdl-core');
 
 console.log(`[${new Date().toISOString()}] Server process starting...`);
 
-const requestHandler = (req, res) => {
+const requestHandler = async (req, res) => {
     console.log(`[${new Date().toISOString()}] Request received: ${req.method} ${req.url}`);
     if (req.url.startsWith('/stream?url=')) {
         const youtubeUrl = decodeURIComponent(req.url.split('/stream?url=')[1]);
@@ -26,8 +26,10 @@ const requestHandler = (req, res) => {
                         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
                         'Accept-Language': 'en-US,en;q=0.5',
                         'Referer': 'https://www.youtube.com/',
-                        'Cookie': '' // Add cookies if needed (optional)
-                    }
+                        'Connection': 'keep-alive'
+                    },
+                    maxRetries: 3,
+                    backoff: { inc: 1000, max: 5000 }
                 }
             });
 
