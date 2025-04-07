@@ -1,0 +1,14 @@
+{
+    "name": "youtube-converter-server",
+    "version": "1.0.0",
+    "main": "server.js",
+    "scripts": {
+      "start": "node server.js"
+    },
+    "dependencies": {
+      "@distube/ytdl-core": "^4.14.4"
+    },
+    "engines": {
+      "node": ">=14.x"
+    }
+  }
