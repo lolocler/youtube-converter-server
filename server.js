@@ -18,14 +18,14 @@ const requestHandler = async (req, res) => {
         }
 
         // Use proxy from environment variable or default
-        const proxy = process.env.PROXY_URL || 'http://47.251.46.105:8888'; // Replace with a working proxy
+        const proxy = process.env.PROXY_URL || 'http://154.49.247.152:80'; // New proxy
         console.log(`[${new Date().toISOString()}] Using proxy: ${proxy}`);
         const agent = new HttpsProxyAgent(proxy);
 
         const stream = ytdl(youtubeUrl, {
             filter: 'videoonly',
             quality: 'highestvideo',
-            httpOptions: { // Use httpOptions instead of requestOptions.agent
+            httpOptions: { // Proxy via httpOptions
                 agent
             },
             requestOptions: {
