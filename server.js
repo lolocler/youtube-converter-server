@@ -16,39 +16,35 @@ const requestHandler = async (req, res) => {
             return;
         }
 
-        const streamVideo = () => {
-            const stream = ytdl(youtubeUrl, {
-                filter: 'videoonly',
-                quality: 'highestvideo',
-                requestOptions: {
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                        'Accept-Language': 'en-US,en;q=0.5',
-                        'Referer': 'https://www.youtube.com/',
-                        'Connection': 'keep-alive'
-                    },
-                    maxRetries: 5, // More retries
-                    backoff: { inc: 2000, max: 10000 } // Longer delays
-                }
-            });
+        const stream = ytdl(youtubeUrl, {
+            filter: 'videoonly',
+            quality: 'highestvideo',
+            requestOptions: {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.5',
+                    'Referer': 'https://www.youtube.com/',
+                    'Connection': 'keep-alive'
+                },
+                maxRetries: 5,
+                backoff: { inc: 2000, max: 10000 }
+            }
+        });
 
-            res.writeHead(200, {
-                'Content-Type': 'video/mp4',
-                'Access-Control-Allow-Origin': '*'
-            });
-            stream.pipe(res);
+        res.writeHead(200, {
+            'Content-Type': 'video/mp4',
+            'Access-Control-Allow-Origin': '*'
+        });
+        stream.pipe(res);
 
-            stream.on('error', (err) => {
-                console.error(`[${new Date().toISOString()}] Stream error: ${err.message}`);
-                if (!res.headersSent) {
-                    res.writeHead(500, { 'Content-Type': 'text/plain' });
-                    res.end('Stream error: ' + err.message);
-                }
-            });
-        };
-
-        streamVideo();
+        stream.on('error', (err) => {
+            console.error(`[${new Date().toISOString()}] Stream error: ${err.message}`);
+            if (!res.headersSent) {
+                res.writeHead(500, { 'Content-Type': 'text/plain' });
+                res.end('Stream error: ' + err.message);
+            }
+        });
     } else if (req.url === '/health') {
         console.log(`[${new Date().toISOString()}] Health check OK`);
         res.writeHead(200, { 'Content-Type': 'text/plain' });
