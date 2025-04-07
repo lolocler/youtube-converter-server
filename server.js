@@ -1,11 +1,13 @@
 const http = require('http');
 const ytdl = require('@distube/ytdl-core');
 
+console.log(`[${new Date().toISOString()}] Starting server initialization...`);
+
 const requestHandler = async (req, res) => {
-    console.log(`[${new Date().toISOString()}] Received request: ${req.url}`);
+    console.log(`[${new Date().toISOString()}] Received request: ${req.method} ${req.url}`);
     if (req.url.startsWith('/stream?url=')) {
         const youtubeUrl = decodeURIComponent(req.url.split('/stream?url=')[1]);
-        console.log(`[${new Date().toISOString()}] Streaming video from: ${youtubeUrl}`);
+        console.log(`[${new Date().toISOString()}] Processing stream request for: ${youtubeUrl}`);
 
         try {
             if (!ytdl.validateURL(youtubeUrl)) {
@@ -34,28 +36,4 @@ const requestHandler = async (req, res) => {
             stream.on('error', (err) => {
                 console.error(`[${new Date().toISOString()}] Stream error: ${err.message}`);
                 if (!res.headersSent) {
-                    res.writeHead(500, { 'Content-Type': 'text/plain' });
-                    res.end('Stream error: ' + err.message);
-                }
-            });
-        } catch (err) {
-            console.error(`[${new Date().toISOString()}] Stream setup error: ${err.message}`);
-            res.writeHead(400, { 'Content-Type': 'text/plain' });
-            res.end('Error streaming video: ' + err.message);
-        }
-    } else {
-        res.writeHead(404, { 'Content-Type': 'text/plain' });
-        res.end('Not found');
-    }
-};
-
-const server = http.createServer(requestHandler);
-const port = process.env.PORT || 10000; // Render default is 10000
-
-server.listen(port, '0.0.0.0', () => {
-    console.log(`[${new Date().toISOString()}] Server is listening on port ${port}`);
-});
-
-server.on('error', (err) => {
-    console.error(`[${new Date().toISOString()}] Server error: ${err.message}`);
-});
+                    res.writeHead(500, { 
