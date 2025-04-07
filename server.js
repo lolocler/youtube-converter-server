@@ -1,6 +1,5 @@
 const http = require('http');
 const ytdl = require('@distube/ytdl-core');
-const { HttpsProxyAgent } = require('https-proxy-agent');
 
 console.log(`[${new Date().toISOString()}] Server process starting...`);
 
@@ -17,47 +16,49 @@ const requestHandler = async (req, res) => {
             return;
         }
 
-        // Use proxy from environment variable or default
-        const proxy = process.env.PROXY_URL || 'http://154.49.247.152:80'; // New proxy
-        console.log(`[${new Date().toISOString()}] Using proxy: ${proxy}`);
-        const agent = new HttpsProxyAgent(proxy);
+        try {
+            const stream = ytdl(youtubeUrl, {
+                filter: 'videoonly',
+                quality: 'highestvideo',
+                requestOptions: {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                        'Accept-Language': 'en-US,en;q=0.5',
+                        'Referer': 'https://www.youtube.com/',
+                        'Connection': 'keep-alive'
+                    },
+                    maxRetries: 5,
+                    backoff: { inc: 2000, max: 10000 }
+                }
+            });
 
-        const stream = ytdl(youtubeUrl, {
-            filter: 'videoonly',
-            quality: 'highestvideo',
-            httpOptions: { // Proxy via httpOptions
-                agent
-            },
-            requestOptions: {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                    'Accept-Language': 'en-US,en;q=0.5',
-                    'Referer': 'https://www.youtube.com/',
-                    'Connection': 'keep-alive'
-                },
-                maxRetries: 5,
-                backoff: { inc: 2000, max: 10000 }
-            }
-        });
+            res.writeHead(200, {
+                'Content-Type': 'video/mp4',
+                'Access-Control-Allow-Origin': '*'
+            });
+            stream.pipe(res);
 
-        res.writeHead(200, {
-            'Content-Type': 'video/mp4',
-            'Access-Control-Allow-Origin': '*'
-        });
-        stream.pipe(res);
-
-        stream.on('error', (err) => {
-            console.error(`[${new Date().toISOString()}] Stream error: ${err.message}`);
-            if (!res.headersSent) {
-                res.writeHead(500, { 'Content-Type': 'text/plain' });
-                res.end('Stream error: ' + err.message);
-            }
-        });
+            stream.on('error', (err) => {
+                console.error(`[${new Date().toISOString()}] Stream error: ${err.message}`);
+                if (!res.headersSent) {
+                    res.writeHead(500, { 'Content-Type': 'text/plain' });
+                    res.end('Stream error: ' + err.message);
+                }
+            });
+        } catch (err) {
+            console.error(`[${new Date().toISOString()}] Stream setup error: ${err.message}`);
+            res.writeHead(500, { 'Content-Type': 'text/plain' });
+            res.end('Stream setup error: ' + err.message);
+        }
     } else if (req.url === '/health') {
         console.log(`[${new Date().toISOString()}] Health check OK`);
         res.writeHead(200, { 'Content-Type': 'text/plain' });
         res.end('OK');
+    } else if (req.url === '/test') {
+        console.log(`[${new Date().toISOString()}] Test endpoint hit`);
+        res.writeHead(200, { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*' });
+        res.end('Server is working!');
     } else {
         console.log(`[${new Date().toISOString()}] 404: ${req.url}`);
         res.writeHead(404, { 'Content-Type': 'text/plain' });
