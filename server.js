@@ -50,8 +50,12 @@ const requestHandler = async (req, res) => {
 };
 
 const server = http.createServer(requestHandler);
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 10000; // Render default is 10000
 
-server.listen(port, () => {
-    console.log(`[${new Date().toISOString()}] Server started and listening on port ${port}`);
+server.listen(port, '0.0.0.0', () => {
+    console.log(`[${new Date().toISOString()}] Server is listening on port ${port}`);
+});
+
+server.on('error', (err) => {
+    console.error(`[${new Date().toISOString()}] Server error: ${err.message}`);
 });
