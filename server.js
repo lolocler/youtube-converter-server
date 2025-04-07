@@ -1,5 +1,6 @@
 const http = require('http');
 const ytdl = require('@distube/ytdl-core');
+const { HttpsProxyAgent } = require('https-proxy-agent');
 
 console.log(`[${new Date().toISOString()}] Server process starting...`);
 
@@ -16,9 +17,17 @@ const requestHandler = async (req, res) => {
             return;
         }
 
+        // Use proxy from environment variable or default
+        const proxy = process.env.PROXY_URL || 'http://47.251.46.105:8888'; // Replace with a working proxy
+        console.log(`[${new Date().toISOString()}] Using proxy: ${proxy}`);
+        const agent = new HttpsProxyAgent(proxy);
+
         const stream = ytdl(youtubeUrl, {
             filter: 'videoonly',
             quality: 'highestvideo',
+            httpOptions: { // Use httpOptions instead of requestOptions.agent
+                agent
+            },
             requestOptions: {
                 headers: {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
