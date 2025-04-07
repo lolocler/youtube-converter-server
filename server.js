@@ -28,8 +28,8 @@ const requestHandler = async (req, res) => {
                         'Referer': 'https://www.youtube.com/',
                         'Connection': 'keep-alive'
                     },
-                    maxRetries: 3,
-                    backoff: { inc: 1000, max: 5000 }
+                    maxRetries: 5, // More retries
+                    backoff: { inc: 2000, max: 10000 } // Longer delays
                 }
             });
 
