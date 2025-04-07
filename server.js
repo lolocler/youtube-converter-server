@@ -1,23 +1,24 @@
 const http = require('http');
 const ytdl = require('@distube/ytdl-core');
 
-const server = http.createServer(async (req, res) => {
+const requestHandler = async (req, res) => {
+    console.log(`[${new Date().toISOString()}] Received request: ${req.url}`);
     if (req.url.startsWith('/stream?url=')) {
         const youtubeUrl = decodeURIComponent(req.url.split('/stream?url=')[1]);
-        console.log('Streaming video from:', youtubeUrl);
+        console.log(`[${new Date().toISOString()}] Streaming video from: ${youtubeUrl}`);
 
         try {
             if (!ytdl.validateURL(youtubeUrl)) {
                 throw new Error('Invalid YouTube URL.');
             }
 
-            console.log('Starting ytdl stream...');
+            console.log(`[${new Date().toISOString()}] Starting ytdl stream...`);
             const stream = ytdl(youtubeUrl, {
                 filter: 'videoonly',
                 quality: 'highestvideo',
                 requestOptions: {
                     headers: {
-                        'User-Agent': `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.0.0 Safari/537.36`,
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.0.0 Safari/537.36',
                         'Accept': '*/*',
                         'Referer': 'https://www.youtube.com/'
                     }
@@ -31,24 +32,26 @@ const server = http.createServer(async (req, res) => {
             stream.pipe(res);
 
             stream.on('error', (err) => {
-                console.error('Stream error:', err.message);
+                console.error(`[${new Date().toISOString()}] Stream error: ${err.message}`);
                 if (!res.headersSent) {
-                    res.writeHead(500);
+                    res.writeHead(500, { 'Content-Type': 'text/plain' });
                     res.end('Stream error: ' + err.message);
                 }
             });
         } catch (err) {
-            console.error('Stream setup error:', err.message);
+            console.error(`[${new Date().toISOString()}] Stream setup error: ${err.message}`);
             res.writeHead(400, { 'Content-Type': 'text/plain' });
             res.end('Error streaming video: ' + err.message);
         }
     } else {
-        res.writeHead(404);
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
         res.end('Not found');
     }
-});
+};
 
+const server = http.createServer(requestHandler);
 const port = process.env.PORT || 8080;
+
 server.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+    console.log(`[${new Date().toISOString()}] Server started and listening on port ${port}`);
 });
